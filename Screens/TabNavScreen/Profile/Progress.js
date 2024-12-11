@@ -14,25 +14,31 @@ const dbProgress=new DBProgress();
 
     // Call GetProgress
     dbProgress.GetProgress(userId, lessonId, (success, result) => {
+      console.log(result);
       if (success) {
         if (result.length > 0) {
-          const { completed, quizscore } = result[0]; // Example: Assuming progress is calculated based on completed/quizscore
-          const calculatedProgress = completed === 1 ? quizscore / 100 : 0; // Example progress logic
+          // Example: Aggregate progress from all records
+          const totalQuizScore = result.reduce((total, record) => total + record.quiz_score, 0); // Sum all quiz scores
+          const totalCompleted = result.reduce((count, record) => count + (record.completed === 1 ? 1 : 1), 0); // Count completed quizzes
+    
+          // Example: Progress logic based on completed quizzes and their scores
+          const calculatedProgress = totalCompleted > 0 ? totalQuizScore / (totalCompleted * 100) : 0; // Normalize progress
           setProgress(calculatedProgress);
         } else {
-          setProgress(0); // No progress
+          setProgress(0); // No progress if no records
         }
       } else {
         setError(result); // Set error message
       }
       setLoading(false);
     });
+    
   };
 
   // Call fetchProgress on component mount
   useEffect(() => {
-    console.log(users)
-   // fetchProgress();
+    
+   fetchProgress();
   }, []);
 
   // Show loading indicator while fetching progress
