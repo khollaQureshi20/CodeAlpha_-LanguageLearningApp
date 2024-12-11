@@ -1,55 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import DBQuiz from '../../../DB/DBQuiz';
 
-const App = ({ navigation }) => {
+const Quiz = ({ navigation }) => {
   const [quizzes, setQuizzes] = useState([]);
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(null); // Track selected option
   const dbQuiz = new DBQuiz();
 
   // Fetch quizzes on component mount
   useEffect(() => {
     dbQuiz.Getquiz((success, quiz) => {
       if (success) {
-        // Filter quizzes with lesson_id = 1
         const filteredQuizzes = quiz.filter(q => q.lesson_id === 1);
-        setQuizzes(filteredQuizzes); 
+        setQuizzes(filteredQuizzes);
       } else {
         console.log('Failed to fetch quizzes:', quiz);
       }
     });
   }, []);
 
-  // Function to handle quiz option selection
-  const handleOptionSelect = (selectedOption) => {
-    const selectedQuiz = quizzes[currentQuizIndex]; // Get the selected quiz
-    const { option_1, option_2, option_3 } = selectedQuiz;
-    console.log('Selected option:', selectedOption);
+  // Handle option selection
+  const handleOptionSelect = (option) => {
+    setSelectedOption(option); // Mark the option as selected
+  };
 
-    // If there are more quizzes, go to the next quiz
+  // Handle the continue button click
+  const handleContinue = () => {
     if (currentQuizIndex < quizzes.length - 1) {
-      setCurrentQuizIndex(currentQuizIndex + 1);
+      setCurrentQuizIndex(currentQuizIndex + 1); // Show the next quiz
+      setSelectedOption(null); // Reset the selected option for the new question
     } else {
-      // If it's the last quiz, show the finish button
       console.log('Last quiz reached');
     }
   };
 
-  // Handle the continue button click (show next quiz)
-  const handleContinue = () => {
-    if (currentQuizIndex < quizzes.length - 1) {
-      setCurrentQuizIndex(currentQuizIndex + 1); // Show the next quiz
-    }
-  };
-
-  // Handle finish button click (return to gamefied screen)
+  // Handle finish button click
   const handleFinish = () => {
-    navigation.goBack(); // Navigate back to the previous screen (e.g., gamefied screen)
+    navigation.navigate('TabNavigation');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Choose the correct translation</Text>
+      <Text style={styles.title}>Choose the correct option</Text>
 
       {quizzes.length > 0 && currentQuizIndex < quizzes.length ? (
         <View style={styles.quizContainer}>
@@ -61,10 +54,12 @@ const App = ({ navigation }) => {
             {[quizzes[currentQuizIndex].option_1, quizzes[currentQuizIndex].option_2, quizzes[currentQuizIndex].option_3].map((option, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.option}
-                onPress={() => handleOptionSelect(option)} // Pass the selected option
+                style={[
+                  styles.option,
+                  selectedOption === option && styles.selectedOption, // Apply selected styling
+                ]}
+                onPress={() => handleOptionSelect(option)} // Select the option
               >
-                <Image source={require('../../../assesst/google.jpg')} style={styles.icon} /> {/* Replace with dynamic icons if needed */}
                 <Text style={styles.optionText}>{option}</Text>
               </TouchableOpacity>
             ))}
@@ -128,10 +123,9 @@ const styles = StyleSheet.create({
     borderColor: '#DDD',
     borderWidth: 1,
   },
-  icon: {
-    width: 50,
-    height: 50,
-    marginBottom: 10,
+  selectedOption: {
+    backgroundColor: '#7CB9E8', // Change color to blue when selected
+    borderColor: '#6B47C9',
   },
   optionText: {
     fontSize: 16,
@@ -156,4 +150,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default Quiz;
